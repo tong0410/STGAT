@@ -8,7 +8,7 @@ Our research provides a new perspective and a powerful tool for predicting the t
 
 The model begins by receiving various input features, which are then fed into an STGAT layer. This layer utilizes a sandwich structure, consisting of Time Convolution Layers and a GAT layer, to efficiently extract and integrate both temporal and graph-based information from the input features.
 
-![pic1](C:\Users\32018\Desktop\stgat\figure\pic1.png)
+![pic1](https://github.com/tong0410/STGAT/tree/main/figure/pic1.png)
 
 
 
