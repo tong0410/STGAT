@@ -90,6 +90,19 @@ class MultiHeadGraphAttention(nn.Module):
 
 
     def forward(self, input, distance, shortpath, quater, movement, conv_count):
+        '''
+        It has more efficient ways to combine the information of nodes and edges together, the code of MultiHeadGraphAttention shows only the simplest method:
+        For Distance and Shortest path, if Distance and Shortest path are provided, they are multiplied by the initial attention score as a mask, and then a proportional factor ratio is used to balance the distance based attention and the shortest path based attention.
+        For Quaternion and Movement, after being transformed through the linear layer, it is compressed into a scalar value and processed again through the convolution layer. They indirectly affect attention mechanisms by affecting h.
+
+        :param input: features of nodes
+        :param distance: feature of edges
+        :param shortpath: feature of edges
+        :param quater: feature of edges
+        :param movement: feature of edges
+        :return: matrix consider the weight of different features of edges
+        '''
+
         batch_size, C_in, T, M = input.size()
 
         input = input.permute(0, 2, 3, 1).contiguous().view(batch_size * T, M, C_in)
@@ -120,7 +133,7 @@ class MultiHeadGraphAttention(nn.Module):
             # e = torch.matmul(a_input, self.a).view(batch_size, T, M, M)
             e = torch.matmul(a_input, self.a).view(batch_size, T, M, M)
 
-            e = e + movement + quater
+            e = e + movement + quater  # Simplest way to deal with movement and quater as example
 
             if distance is not None:
                 e = e * distance.to(e.device).float()

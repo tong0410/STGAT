@@ -12,15 +12,15 @@ The model begins by receiving various input features, which are then fed into an
 
 
 
-## Example(RS1)
+## Training model
 
-* If you want to train the STGAT model on RS1 protein:
+* If you want to train the STGAT model on "test" protein:
 
 ```bash
-python ./main.py --dataset RS1 --epochs 300 
+python ./main.py --dataset test --epochs 300 
 ```
 
-* After training the model on RS1, you should use the model to finish the prediction:
+* After training the model on "test", you should use the model to finish the prediction:
 
 ```bash
 python ./tools/predict.py
