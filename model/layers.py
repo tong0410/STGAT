@@ -75,6 +75,19 @@ class MultiHeadGraphAttention(nn.Module):
         self.movement_linear = nn.Linear(3, 1, bias=True)
         self.quater_linear = nn.Linear(4, 1, bias=True)
 
+        # # Embedding way
+        # self.embedding_dim = embedding_dim
+        # self.distance_embedding = nn.Linear(n_his, embedding_dim)
+        # self.shortpath_embedding = nn.Linear(n_his, embedding_dim)
+        # self.movement_embedding = nn.Linear(3, embedding_dim)
+        # self.quater_embedding = nn.Linear(4, embedding_dim)
+
+        # # GRU
+        # self.gru_hidden_size = gru_hidden_size
+        # self.gru = nn.GRU(input_size=n_his * 4, hidden_size=gru_hidden_size, batch_first=True)
+        # self.a = nn.Parameter(torch.zeros(size=(2 * self.d_k + gru_hidden_size, 1)))
+
+
         self.W = nn.Parameter(torch.zeros(size=(in_features, out_features)))
         self.a = nn.Parameter(torch.zeros(size=(2 * self.d_k, 1)))
 
@@ -87,6 +100,10 @@ class MultiHeadGraphAttention(nn.Module):
             out_channels = n_his - (i + 1) * 4 + 2
             self.conv_layer.append(nn.Conv2d(in_channels=n_his, out_channels=out_channels, kernel_size=1))
 
+        # # GRU
+        # for i in range(stblock_num):
+        #     out_channels = n_his - (i + 1) * 4 + 2
+        #     self.conv_layer.append(nn.Conv2d(in_channels=gru_hidden_size, out_channels=out_channels, kernel_size=1))
 
 
     def forward(self, input, distance, shortpath, quater, movement, conv_count):
@@ -118,6 +135,68 @@ class MultiHeadGraphAttention(nn.Module):
 
         h = torch.matmul(input, self.W)
 
+        # # Embedding way (Further adjustments are needed)
+        # distance_emb = self.distance_embedding(distance)
+        # shortpath_emb = self.shortpath_embedding(shortpath)
+        # movement_emb = self.movement_embedding(movement)
+        # quater_emb = self.quater_embedding(quater)
+        # edge_features = torch.cat([distance_emb, shortpath_emb, movement_emb, quater_emb], dim=-1)
+        # edge_features = self.conv_layer[conv_count](edge_features)
+        # Reshape node and edge features
+        # h = h.view(batch_size * T, M, self.num_heads, self.d_k).transpose(2, 1)
+        # edge_features = edge_features.view(batch_size * T, M, M, -1)
+        # attention_outputs = []
+        # for i in range(self.num_heads):
+        #     h_head = h[:, i, :, :]
+        #     h_flat = h_head.view(batch_size * T, M, -1)
+        #     h_repeated1 = h_flat.unsqueeze(2).repeat(1, 1, M, 1)
+        #     h_repeated2 = h_flat.unsqueeze(1).repeat(1, M, 1, 1)
+        #     h_concat = torch.cat([h_repeated1, h_repeated2], dim=3)
+        #
+        #     # Combine node and edge features
+        #     h_concat = torch.cat([h_concat, edge_features], dim=-1)
+        #     a_input = h_concat.view(batch_size * T * M * M, -1)
+        #     e = torch.matmul(a_input, self.a).view(batch_size, T, M, M)
+        #     attention = F.softmax(e, dim=-1)
+        #     attention = F.dropout(attention, self.dropout, training=self.training)
+        #     attention_reshaped = attention.view(batch_size * T, M, M)
+        #     h_prime = torch.matmul(attention_reshaped, h_flat)
+        #
+        #     attention_outputs.append(h_prime)
+        # h_prime_concat = torch.cat(attention_outputs, dim=-1)
+        # output = h_prime_concat.view(batch_size, T, M, -1)
+
+        # # GRU (Further adjustments are needed)
+        # edge_features = torch.cat([distance, shortpath, quater, movement], dim=1)
+        # edge_features = edge_features.view(batch_size * T, M * M, n_his * 4)
+        # gru_output, _ = self.gru(edge_features)
+        # gru_output = gru_output.view(batch_size, T, M, M, self.gru_hidden_size)
+        # gru_output = self.conv_layer[conv_count](gru_output.permute(0, 1, 3, 4, 2)).permute(0, 1, 4, 2, 3)
+        #
+        # # Reshape node and edge features
+        # h = h.view(batch_size * T, M, self.num_heads, self.d_k).transpose(2, 1)
+        # gru_output = gru_output.view(batch_size * T, M, M, -1)
+
+        # attention_outputs = []
+        # for i in range(self.num_heads):
+        #     h_head = h[:, i, :, :]
+        #     h_flat = h_head.view(batch_size * T, M, -1)
+        #     h_repeated1 = h_flat.unsqueeze(2).repeat(1, 1, M, 1)
+        #     h_repeated2 = h_flat.unsqueeze(1).repeat(1, M, 1, 1)
+        #     h_concat = torch.cat([h_repeated1, h_repeated2], dim=3)
+        #
+        #     # Combine node and edge features
+        #     h_concat = torch.cat([h_concat, gru_output], dim=-1)
+        #     a_input = h_concat.view(batch_size * T * M * M, -1)
+        #     e = torch.matmul(a_input, self.a).view(batch_size, T, M, M)
+        #     attention = F.softmax(e, dim=-1)
+        #     attention = F.dropout(attention, self.dropout, training=self.training)
+        #     attention_reshaped = attention.view(batch_size * T, M, M)
+        #     h_prime = torch.matmul(attention_reshaped, h_flat)
+        #     attention_outputs.append(h_prime)
+        # h_prime_concat = torch.cat(attention_outputs, dim=-1)
+        # output = h_prime_concat.view(batch_size, T, M, -1)
+
         h_heads = h.view(batch_size * T, M, self.num_heads, self.d_k).transpose(2, 1)
 
         attention_outputs = []
@@ -135,6 +214,7 @@ class MultiHeadGraphAttention(nn.Module):
 
             e = e + movement + quater  # Simplest way to deal with movement and quater as example
 
+            # Choose to mask the distance and shortpath or not
             if distance is not None:
                 e = e * distance.to(e.device).float()
                 e = e.masked_fill(e == 0, float("-inf"))

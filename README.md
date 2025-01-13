@@ -1,6 +1,6 @@
 # README
 
-To run this code, you should first prepare some of the datasets. Different numpy files represent different features. And you should prepare nodes features and edges features separately. 
+To run this code, you should first prepare some of the datasets in "data" folder. Create your "protein name" as  folder name  in "data". And it should contain "distance_value.npy, movement_vector.npy, path_length.npy, quater_number.npy" which are edges features, "values_6.npy" which is nodes features. Different numpy files represent different features. And you should prepare nodes features and edges features separately. 
 
 Our research provides a new perspective and a powerful tool for predicting the trajectory of biomacromolecules, and realizes the real-time dynamic monitoring of the trajectory of biomacromolecules.  And our model adeptly assimilates structural information from each protein’s molecular space, enabling accurate trajectory predictions. In practical applications, a synergistic integration of deep learning methods and traditional molecular dynamics simulations can offer a more comprehensive and precise molecular prediction and analysis framework.
 
